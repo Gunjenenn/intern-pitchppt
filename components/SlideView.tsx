@@ -157,10 +157,15 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
 
     case 'teamGroup':
       return (
-        <div className="w-[42%] text-center">
+        <div className="text-center max-md:mx-auto max-md:w-fit max-md:rounded-2xl max-md:bg-[#0A0B10]/85 max-md:px-5 max-md:py-6 md:w-[42%]">
           <Pill>{s.eyebrow}</Pill>
-          <H className="text-6xl md:text-8xl">{s.title}</H>
+          <H className="!text-[clamp(2.5rem,5vw,5.5rem)]">{s.title}</H>
           <motion.p variants={item} className="mt-4 font-display text-lg font-bold opacity-80 md:text-xl" style={{ textShadow: 'var(--tshadow)' }}>{s.subtitle}</motion.p>
+          <motion.ol variants={item} aria-label="Багийн гишүүд"
+            className="mx-auto mt-6 w-fit space-y-2 border-t border-white/20 pt-5 text-base font-bold leading-snug md:text-lg lg:text-xl"
+            style={{ textShadow: 'var(--tshadow)' }}>
+            {TEAM.members.map(({ name }) => <li key={name}>{name}</li>)}
+          </motion.ol>
         </div>
       );
 
