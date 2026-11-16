@@ -1,7 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { slides, type Theme } from '@/data/slidesData';
 import SlideView from './SlideView';
 import { DarkBackdrop, FmsBackdrop, TeamScene, YariiBackdrop, YARII_FRAMES } from './Backdrops';
@@ -94,7 +93,11 @@ export default function Deck() {
       </div>
 
       {/* Slide */}
-      <div className="absolute inset-0 z-10 overflow-y-auto">
+      <div className="absolute inset-0 z-10 overflow-y-auto" onClick={(event) => {
+        if (!(event.target instanceof Element) || event.target.closest('a, button, [contenteditable="true"]')) return;
+        if (window.getSelection()?.isCollapsed === false) return;
+        step(1);
+      }}>
         <AnimatePresence mode="wait" custom={dir}>
           <motion.section key={slide.id}
             initial={tr.i(dir || 1)} animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, rotateX: 0 }} exit={tr.e(dir || 1)}
@@ -105,23 +108,6 @@ export default function Deck() {
         </AnimatePresence>
       </div>
 
-      {/* Controls */}
-      <div className="absolute inset-x-0 bottom-0 z-20 flex items-center gap-4 px-6 pb-5 md:px-12">
-        <div className="flex flex-1 gap-1">
-          {slides.map((s, i) => (
-            <button key={s.id} aria-label={`Slide ${i + 1}`} onClick={() => goTo(i)} className="h-4 flex-1 py-1.5">
-              <span className="block h-full rounded-full transition-all duration-500" style={{ background: 'var(--fg)', opacity: i <= index ? 1 : 0.18 }} />
-            </button>
-          ))}
-        </div>
-        {[{ d: -1, I: ChevronLeft, off: index === 0 }, { d: 1, I: ChevronRight, off: index === total - 1 }].map(({ d, I, off }) => (
-          <button key={d} onClick={() => step(d)} disabled={off} aria-label={d < 0 ? 'Previous' : 'Next'}
-            className="grid h-11 w-11 place-items-center rounded-full border-2 transition hover:scale-110 disabled:opacity-20"
-            style={{ borderColor: 'var(--fg)' }}>
-            <I size={20} />
-          </button>
-        ))}
-      </div>
     </motion.main>
   );
 }
