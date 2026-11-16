@@ -174,6 +174,17 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
         </>
       );
 
+    case 'title':
+      return (
+        <div className="text-center">
+          <motion.h1 variants={wrap} style={hStyle} className="font-display text-[clamp(2.5rem,min(12vw,16vh),8.5rem)] leading-[1.05]">
+            <motion.span variants={item} className="block">{s.title[0]}</motion.span>{' '}
+            <motion.span variants={item} className="block" style={{ color: 'var(--accent)' }}>{s.title[1]}</motion.span>
+          </motion.h1>
+          <motion.div aria-hidden="true" variants={item} className="mx-auto mt-8 h-px w-36 bg-gradient-to-r from-transparent via-[#EFC081] to-transparent" />
+        </div>
+      );
+
     case 'hero':
       return (
         <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -187,24 +198,31 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
       );
 
     case 'stats': {
-      const [main, ...rest] = STATS;
+      const [main, entrants] = STATS;
+      const sourceClass = 'text-sm opacity-70 underline decoration-white/40 underline-offset-4 hover:opacity-100';
       return (
-        <div className="grid items-center gap-12 lg:grid-cols-[1.2fr_1fr]">
+        <div className="grid items-center gap-x-12 gap-y-8 lg:grid-cols-[1.2fr_1fr]"
+          style={{ textShadow: '0 1px 3px var(--bg), 0 0 8px var(--bg)' }}>
           <div>
-            <Pill>{s.eyebrow}</Pill>
             <H>{s.title}</H>
-            <motion.p variants={pop} style={hStyle} className="mt-6 font-display text-[6rem] leading-none md:text-[10rem]"><Accent>{main.value}</Accent></motion.p>
+            <motion.p variants={pop} style={hStyle} className="mt-6 font-display text-[clamp(2.75rem,10vw,7rem)] leading-none"><Accent>{main.value}</Accent></motion.p>
             <motion.p variants={item} className="font-display text-xl font-bold md:text-2xl">{main.label}</motion.p>
-            <motion.p variants={item} className="mt-2 text-xs opacity-40">{main.source}</motion.p>
+            <motion.p variants={item} className="mt-2">
+              <a className={sourceClass} href={main.sourceUrl} target="_blank" rel="noopener noreferrer">{main.source}</a>
+            </motion.p>
           </div>
           <div className="space-y-8">
-            {rest.map((st, i) => (
-              <motion.div key={i} variants={item} className="border-t-2 pt-6" style={{ borderColor: 'color-mix(in srgb, var(--fg) 18%, transparent)' }}>
-                <p style={hStyle} className="font-display text-6xl">{st.value}</p>
-                <p className="mt-2 text-xl font-bold">{st.label}</p>
-                <p className="mt-1 text-xs opacity-40">{st.source}</p>
-              </motion.div>
-            ))}
+            <motion.div variants={item} className="border-t border-white/20 pt-6">
+              <p style={hStyle} className="font-display text-5xl md:text-6xl">{entrants.value}</p>
+              <p className="mt-2 text-xl font-bold">{entrants.label}</p>
+              <p className="mt-1">
+                <a className={sourceClass} href={entrants.sourceUrl} target="_blank" rel="noopener noreferrer">{entrants.source}</a>
+              </p>
+            </motion.div>
+            <motion.dl variants={item} className="border-t border-white/20 pt-6">
+              <dt className="font-display text-xl font-bold md:text-2xl">Сургуулиа сольсон сурагчид</dt>
+              <dd className="mt-2 opacity-75">Улсын хэмжээний жилийн тоо олдоогүй.</dd>
+            </motion.dl>
           </div>
         </div>
       );

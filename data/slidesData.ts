@@ -43,11 +43,19 @@ export const TEAM = {
 /** ✏️ 1 сарын үнэ */
 export const PRICE = '[Үнэ ₮]';
 
-/** ✏️ Статистик — ЖИШЭЭ. Өөрийн тоогоор солино. Эхнийх нь том харагдана. */
 export const STATS = [
-  { value: 'XX%', label: 'эцэг эх сургууль сонгохдоо эргэлздэг', source: '[Манай судалгаа, n=___]' },
-  { value: 'XX,XXX', label: 'сурагч жил бүр шилждэг', source: '[Эх сурвалж]' },
-  { value: 'XX%', label: 'ам дамжсан мэдээлэлд найддаг', source: '[Манай судалгаа]' },
+  {
+    value: '819,907',
+    label: 'Монгол Улсын ЕБС-ийн нийт сурагч',
+    source: 'Боловсролын яам · 2025–2026',
+    sourceUrl: 'https://moe.gov.mn/post/170077',
+  },
+  {
+    value: '75,890',
+    label: '1-р ангид шинээр элссэн хүүхэд',
+    source: 'Боловсролын яам · 2025–2026 · А-БДБ-7',
+    sourceUrl: 'https://moe.gov.mn/post/170077',
+  },
 ];
 
 export type Theme = 'dark' | 'fms' | 'yarii' | 'team';
@@ -61,8 +69,9 @@ export type Slide =
   | (Base & { type: 'teamGroup'; eyebrow: string; title: string; subtitle: string })
   | (Base & { type: 'member'; idx: number })
   | (Base & { type: 'split'; title: string; projects: { name: string; tag: string; img: string }[] })
+  | (Base & { type: 'title'; title: [string, string] })
   | (Base & { type: 'hero'; eyebrow: string; title: string; subtitle: string; img: string })
-  | (Base & { type: 'stats'; eyebrow: string; title: string })
+  | (Base & { type: 'stats'; title: string })
   | (Base & { type: 'cards'; eyebrow: string; title: string; variant: 'default' | 'problem' | 'solution'; cards: Card[] })
   | (Base & { type: 'question'; eyebrow: string; title: string })
   | (Base & { type: 'demo'; eyebrow: string; title: string; subtitle: string; url: string; cta: string; img: string; restart?: boolean })
@@ -89,12 +98,11 @@ export const slides: Slide[] = [
       { name: 'Yarii Mongola', tag: 'Хэл + Соёл + AI', img: IMG.yarii },
     ] },
 
-  { id: 'fms-hero', type: 'hero', theme: 'fms', cam: { pos: [6, 2, 9] },
-    eyebrow: 'Төсөл 01', title: 'Find My School',
-    subtitle: 'Сургуулиа ухаалгаар сонго', img: IMG.fms },
+  { id: 'fms-hero', type: 'title', theme: 'fms', cam: { pos: [6, 2, 9] },
+    title: ['Find My', 'School'] },
 
   { id: 'fms-stats', type: 'stats', theme: 'fms', cam: { pos: [2, 5, 10] },
-    eyebrow: 'Судалгаа', title: 'Бодит Тоо Баримт' },
+    title: 'ЕБС-ийн сурагчид' },
 
   { id: 'fms-audience', type: 'cards', variant: 'default', theme: 'fms', cam: { pos: [-6, 1, 9] },
     eyebrow: 'Хэнд?', title: 'Зорилтот Хэрэглэгчид',
