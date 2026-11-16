@@ -2,26 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+html, body { height: 100%; background: #0A0B10; color: #ECE8DC; overflow: hidden; }
+body { -webkit-font-smoothing: antialiased; }
+::selection { background: rgba(212,175,55,.35); }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer components {
+  .glass {
+    background: linear-gradient(135deg, rgba(255,255,255,.07), rgba(255,255,255,.015));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(212,175,55,.18);
+  }
+  .gold-text {
+    background: linear-gradient(100deg, #F3E2A0 0%, #D4AF37 45%, #9C7B1E 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .glow { box-shadow: 0 0 0 1px rgba(212,175,55,.55), 0 0 42px -6px rgba(212,175,55,.65); }
+  .chip {
+    @apply rounded-full border border-gold/30 bg-ink/60 px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-gold/90 backdrop-blur;
+  }
+  /* Mongolian "alkhan khee" meander pattern */
+  .meander {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12' viewBox='0 0 24 12'%3E%3Cpath d='M0 11H9V3H4V7H6M12 1H21V9H16V5H18' fill='none' stroke='%23D4AF37' stroke-width='1'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+  }
+  .pattern-bg {
+    background-color: #0E1018;
+    background-image:
+      radial-gradient(circle at 50% 50%, rgba(212,175,55,.10), transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M20 4 L36 20 L20 36 L4 20Z M20 12 L28 20 L20 28 L12 20Z' fill='none' stroke='%23D4AF37' stroke-opacity='.12'/%3E%3C/svg%3E");
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes caret { 0%, 45% { opacity: 1; } 55%, 100% { opacity: 0; } }
+.animate-marquee { animation: marquee 60s linear infinite; }
+.animate-caret { animation: caret 1s steps(1) infinite; }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
+/* Yarii гэрэлтэй самбар (mongolingo-оос) */
+@keyframes sign-on { 0% { filter: brightness(.25) saturate(.2); } 12% { filter: brightness(1.25) saturate(1); } 18% { filter: brightness(.35) saturate(.4); } 30% { filter: brightness(1.1) saturate(1); } 36% { filter: brightness(.55) saturate(.6); } 50%, 100% { filter: brightness(1) saturate(1); } }
+@keyframes sign-glow { 0%, 100% { filter: brightness(1) drop-shadow(0 0 10px rgba(255,214,160,.35)); } 50% { filter: brightness(1.08) drop-shadow(0 0 22px rgba(255,214,160,.6)); } }
+@keyframes sign-broken { 0%, 100% { filter: brightness(.9) saturate(.5); } 3% { filter: brightness(.3) saturate(.2); } 6% { filter: brightness(.95) saturate(.5); } 48% { filter: brightness(.9) saturate(.5); } 50% { filter: brightness(.25) saturate(.2); } 53% { filter: brightness(.85) saturate(.5); } 55% { filter: brightness(.35); } 58% { filter: brightness(.9) saturate(.5); } }
+.sign-on { animation: sign-on 1.6s ease-out both, sign-glow 3.2s ease-in-out 1.6s infinite; }
+.sign-broken { animation: sign-on 1.6s ease-out both, sign-broken 4s steps(1) 1.6s infinite; }
