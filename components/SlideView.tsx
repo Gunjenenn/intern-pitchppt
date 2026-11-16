@@ -1,6 +1,6 @@
 'use client';
-import { createContext, useContext } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { createContext, useContext, useEffect } from 'react';
+import { animate, motion, useMotionValue, useReducedMotion, useTransform, type Variants } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Check, Crown, RotateCcw, X } from 'lucide-react';
 import type { Slide, Theme } from '@/data/slidesData';
 import { STATS, TEAM } from '@/data/slidesData';
@@ -42,6 +42,33 @@ const H = ({ children, className = '' }: { children: string; className?: string 
   <motion.h2 variants={item} style={hStyle} className={`font-display text-4xl leading-[1] md:text-6xl lg:text-7xl ${className}`}><Animated text={children} /></motion.h2>
 );
 const Accent = ({ children }: { children: React.ReactNode }) => <span style={{ color: 'var(--accent)' }}>{children}</span>;
+
+const wholeNumber = new Intl.NumberFormat('en-US');
+
+function CountUp({ value, currency = false }: { value: number; currency?: boolean }) {
+  const count = useMotionValue(0);
+  const reduceMotion = useReducedMotion();
+  const format = (number: number) => `${number < 0 ? '−' : ''}${currency ? '₮' : ''}${wholeNumber.format(Math.abs(number))}`;
+  const display = useTransform(count, (number) => format(Math.round(number)));
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    count.set(0);
+    const animation = animate(count, value, { delay: 0.4, duration: 1.3, ease: 'easeOut' });
+    return () => animation.stop();
+  }, [count, reduceMotion, value]);
+
+  const total = format(value);
+  if (reduceMotion) return <>{total}</>;
+
+  return (
+    <span className="relative inline-grid whitespace-nowrap tabular-nums">
+      <span className="sr-only">{total}</span>
+      <span aria-hidden="true" className="invisible [grid-area:1/1]">{total}</span>
+      <motion.span aria-hidden="true" className="[grid-area:1/1]">{display}</motion.span>
+    </span>
+  );
+}
 
 function GoldButton({ href, onClick, children, icon = 'link' }: { href?: string; onClick?: () => void; children: React.ReactNode; icon?: 'link' | 'next' }) {
   const cls = 'group inline-flex items-center gap-3 px-8 py-5 font-display text-sm font-bold tracking-wide [background:var(--btn)] [color:var(--btnFg)] [border-radius:var(--btnR)] [box-shadow:var(--btnShadow)]';
@@ -130,7 +157,7 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
 
     case 'teamGroup':
       return (
-        <div className="max-w-[34%] pt-[30vh]">
+        <div className="w-[42%] text-center">
           <Pill>{s.eyebrow}</Pill>
           <H className="text-6xl md:text-8xl">{s.title}</H>
           <motion.p variants={item} className="mt-4 font-display text-lg font-bold opacity-80 md:text-xl" style={{ textShadow: 'var(--tshadow)' }}>{s.subtitle}</motion.p>
@@ -139,17 +166,27 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
 
     case 'member': {
       const m = TEAM.members[s.idx];
+      const nameParts = m.name.split(' ');
+      const givenName = nameParts.pop() ?? '';
+      const patronymic = nameParts.join(' ');
       return (
-        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_1fr]">
+        <div className="grid grid-cols-1 md:grid-cols-[1.2fr_minmax(0,1fr)]">
           <div />
-          <motion.div key={s.idx} initial={{ opacity: 0, x: 80 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5, type: 'spring', stiffness: 80, damping: 16 }}>
+          <motion.div key={s.idx} className="[container-type:inline-size]" initial={{ opacity: 0, x: 80 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5, type: 'spring', stiffness: 80, damping: 16 }}>
             <p className="mb-6 font-display text-sm font-bold tracking-[0.3em] opacity-60">{String(s.idx + 1).padStart(2, '0')} / {String(TEAM.members.length).padStart(2, '0')}</p>
             <motion.span initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.8, type: 'spring' }}
               className={`mb-6 inline-flex items-center gap-2 rounded-full px-5 py-2 font-display text-sm font-bold uppercase tracking-wider ${'lead' in m && m.lead ? 'bg-[#D4AF37] text-[#0A0B10] shadow-[0_0_40px_-6px_rgba(212,175,55,.9)]' : 'bg-white/10 text-[#F5F1E6] ring-1 ring-white/20'}`}>
               {'lead' in m && m.lead && <Crown size={16} />}{m.role}
             </motion.span>
-            <h2 contentEditable suppressContentEditableWarning style={hStyle} className="font-display text-5xl leading-[0.95] outline-none md:text-7xl lg:text-8xl">
-              <WordIn text={m.name} delay={0.7} />
+            <h2 contentEditable suppressContentEditableWarning style={hStyle} className="font-display leading-[1.05] outline-none">
+              {patronymic && (
+                <span className="mb-2 block text-[clamp(1.125rem,8cqw,3rem)]">
+                  <WordIn text={patronymic} delay={0.7} />
+                </span>
+              )}
+              <span className="block text-[clamp(1.75rem,11cqw,5rem)]">
+                <WordIn text={givenName} delay={0.79} />
+              </span>
             </h2>
             <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 1.1, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="my-6 h-1 w-32 origin-left rounded-full bg-[#D4AF37]" />
@@ -187,18 +224,26 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
 
     case 'hero':
       return (
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className={s.img ? 'grid items-center gap-7 md:grid-cols-2 md:gap-10' : 'text-center'}>
           <div>
             <Pill>{s.eyebrow}</Pill>
-            <motion.h1 variants={item} style={hStyle} className="font-display text-6xl leading-[0.95] md:text-8xl"><Animated text={s.title} /></motion.h1>
+            <motion.h1 variants={item} style={hStyle} className={s.img
+              ? 'font-display text-[clamp(2rem,4.2vw,3.75rem)] leading-[1.08]'
+              : 'font-display text-6xl leading-[0.95] md:text-8xl'}>
+              <Animated text={s.title} />
+            </motion.h1>
             <motion.p variants={item} className="mt-6 font-display text-xl font-bold opacity-80 md:text-2xl">{s.subtitle}</motion.p>
           </div>
-          <motion.div variants={pop} className="rotate-3"><Float amp={18}><ImageFrame src={s.img} ratio="16:10" /></Float></motion.div>
+          {s.img && (
+            <motion.div variants={pop}>
+              <ImageFrame src={s.img} ratio="4:3" className="ring-1 ring-white/20" />
+            </motion.div>
+          )}
         </div>
       );
 
     case 'stats': {
-      const [main, entrants] = STATS;
+      const [main, ...rest] = STATS;
       const sourceClass = 'text-sm opacity-70 underline decoration-white/40 underline-offset-4 hover:opacity-100';
       return (
         <div className="grid items-center gap-x-12 gap-y-8 lg:grid-cols-[1.2fr_1fr]"
@@ -212,18 +257,42 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
             </motion.p>
           </div>
           <div className="space-y-8">
-            <motion.div variants={item} className="border-t border-white/20 pt-6">
-              <p style={hStyle} className="font-display text-5xl md:text-6xl">{entrants.value}</p>
-              <p className="mt-2 text-xl font-bold">{entrants.label}</p>
-              <p className="mt-1">
-                <a className={sourceClass} href={entrants.sourceUrl} target="_blank" rel="noopener noreferrer">{entrants.source}</a>
-              </p>
-            </motion.div>
-            <motion.dl variants={item} className="border-t border-white/20 pt-6">
-              <dt className="font-display text-xl font-bold md:text-2xl">Сургуулиа сольсон сурагчид</dt>
-              <dd className="mt-2 opacity-75">Улсын хэмжээний жилийн тоо олдоогүй.</dd>
-            </motion.dl>
+            {rest.map((stat) => (
+              <motion.div key={stat.label} variants={item} className="border-t border-white/20 pt-6">
+                <p style={hStyle} className="font-display text-5xl md:text-6xl">{stat.value}</p>
+                <p className="mt-2 text-xl font-bold">{stat.label}</p>
+                <p className="mt-1">
+                  <a className={sourceClass} href={stat.sourceUrl} target="_blank" rel="noopener noreferrer">{stat.source}</a>
+                </p>
+              </motion.div>
+            ))}
           </div>
+        </div>
+      );
+    }
+
+    case 'arrivals': {
+      const total = s.purposes.reduce((sum, purpose) => sum + purpose.value, 0);
+      return (
+        <div className="mx-auto max-w-6xl text-center">
+          <motion.h2 variants={item} className="font-display text-2xl font-bold leading-tight md:text-4xl">{s.title}</motion.h2>
+          <motion.div variants={item} className="mt-6 md:mt-8">
+            <p className="font-display text-[clamp(3.5rem,12vw,10rem)] font-black leading-none tracking-tight text-[#E8CB9D] tabular-nums">
+              {total.toLocaleString('en-US')}
+            </p>
+            <a href={s.sourceUrl} target="_blank" rel="noopener noreferrer"
+              title="Эх сурвалж: ҮСХ · ХХЕГ" className="mt-2 inline-block text-lg font-semibold text-white/80 underline decoration-white/30 underline-offset-4 hover:text-white md:text-xl">
+              {s.year} оны нийт ирэлт
+            </a>
+          </motion.div>
+          <dl className="mt-8 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-white/15 pt-6 md:mt-12 md:grid-cols-4 md:pt-8">
+            {s.purposes.map(({ label, value }) => (
+              <motion.div key={label} variants={item} className="flex flex-col-reverse gap-2">
+                <dt className="text-sm font-semibold text-white/75 md:text-base">{label}</dt>
+                <dd className="font-display text-[clamp(1.65rem,4vw,3.5rem)] font-bold leading-none tabular-nums">{value.toLocaleString('en-US')}</dd>
+              </motion.div>
+            ))}
+          </dl>
         </div>
       );
     }
@@ -290,33 +359,25 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
 
     case 'demo':
       return (
-        <div className="grid items-center gap-12 lg:grid-cols-[1.3fr_1fr]">
-          <motion.a variants={pop} href={s.url} target="_blank" rel="noopener noreferrer" className="block -rotate-2 transition hover:rotate-0">
-            <Float amp={16}>
-              <div className="overflow-hidden rounded-[2rem] bg-[#0A0B10] p-2 shadow-2xl">
-                <div className="flex gap-2 px-4 py-3"><span className="h-3 w-3 rounded-full bg-red-400" /><span className="h-3 w-3 rounded-full bg-amber-300" /><span className="h-3 w-3 rounded-full bg-emerald-400" /></div>
-                <ImageFrame src={s.img} ratio="16:10" className="rounded-[1.5rem]" />
-              </div>
-            </Float>
-          </motion.a>
-          <div>
-            <Pill>{s.eyebrow}</Pill>
-            <H className="text-4xl md:text-5xl lg:text-6xl">{s.title}</H>
-            <motion.p variants={item} className="mb-8 mt-4 font-display text-lg font-bold opacity-70">{s.subtitle}</motion.p>
-            <motion.div variants={item} className="mb-8">
+        <div className="text-center">
+          <Pill>{s.eyebrow}</Pill>
+          <H className="text-4xl md:text-5xl lg:text-6xl">{s.title}</H>
+          <motion.p variants={item} className="mb-8 mt-4 font-display text-lg font-bold opacity-70">{s.subtitle}</motion.p>
+          {s.showQr && (
+            <motion.div variants={item} className="mb-8 flex justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img alt="QR" className="h-28 w-28 rounded-2xl bg-white p-2"
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=4&data=${encodeURIComponent(s.url)}`} />
             </motion.div>
-            <div className="flex flex-wrap items-center gap-4">
-              <GoldButton href={s.url}>{s.cta}</GoldButton>
-              {s.restart && (
-                <motion.button variants={item} onClick={onRestart} whileHover={{ scale: 1.06 }}
-                  className="inline-flex items-center gap-2 rounded-full border-2 px-6 py-5 font-display text-sm font-bold uppercase" style={{ borderColor: 'var(--fg)' }}>
-                  <RotateCcw size={18} />Дахин
-                </motion.button>
-              )}
-            </div>
+          )}
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <GoldButton href={s.url}>{s.cta}</GoldButton>
+            {s.restart && (
+              <motion.button variants={item} onClick={onRestart} whileHover={{ scale: 1.06 }}
+                className="inline-flex items-center gap-2 rounded-full border-2 px-6 py-5 font-display text-sm font-bold uppercase" style={{ borderColor: 'var(--fg)' }}>
+                <RotateCcw size={18} />Дахин
+              </motion.button>
+            )}
           </div>
         </div>
       );
@@ -324,29 +385,31 @@ function render(s: Slide, onNext: () => void, onRestart: () => void) {
     case 'pricing':
       return (
         <>
-          <div className="mb-14 text-center"><Pill>{s.eyebrow}</Pill><H>{s.title}</H></div>
-          <div className="mx-auto grid max-w-6xl items-center gap-16 md:grid-cols-2">
+          <div className="mb-8 text-center"><Pill>{s.eyebrow}</Pill><H className="lg:!text-6xl">{s.title}</H></div>
+          <div className="mx-auto grid max-w-5xl items-center gap-x-12 gap-y-8 md:grid-cols-2">
             <motion.div variants={item}>
-              <p className="mb-6 text-lg font-bold opacity-75" style={{ textShadow: 'var(--tshadow)' }}>{s.ai.title}</p>
-              <p style={hStyle} className="font-display text-3xl leading-tight md:text-4xl">🇲🇳 {s.ai.from}</p>
-              <motion.div className="my-5 h-14 w-[3px] rounded-full" style={{ background: 'var(--accent)', transformOrigin: 'top' }}
+              <p className="mb-3 text-lg font-bold opacity-75" style={{ textShadow: 'var(--tshadow)' }}>{s.ai.title}</p>
+              <p style={hStyle} className="font-display text-2xl leading-tight md:text-3xl">🇲🇳 {s.ai.from}</p>
+              <motion.div className="my-2 h-5 w-[3px] rounded-full" style={{ background: 'var(--accent)', transformOrigin: 'top' }}
                 animate={{ scaleY: [0, 1, 1], opacity: [1, 1, 0] }} transition={{ duration: 1.8, repeat: Infinity }} />
-              <p style={{ ...hStyle, color: 'var(--accent)' }} className="font-display text-3xl leading-tight md:text-4xl">
+              <p style={{ ...hStyle, color: 'var(--accent)' }} className="font-display text-2xl leading-tight md:text-3xl">
                 {s.theme === 'yarii' ? <>🇬🇧 <GlowLetters text={s.ai.to} delay={1.2} /></> : <Typewriter text={`🇬🇧 ${s.ai.to}`} delay={1400} speed={45} />}
               </p>
             </motion.div>
             <motion.div variants={pop} className="text-center md:text-left">
-              <p style={hStyle} className="font-display text-3xl opacity-80">{s.plan.period}</p>
-              {/* ✏️ Үнэ: slidesData.ts → PRICE */}
-              {s.theme === 'yarii'
-                ? <div className="my-5 flex justify-center md:justify-start"><Sign i={0} title={s.plan.price} big /></div>
-                : <Float amp={8}><p style={{ ...hStyle, color: 'var(--accent)' }} className="my-3 font-display text-7xl leading-none md:text-8xl">{s.plan.price}</p></Float>}
-              <div className="mb-10 mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 md:justify-start">
-                {s.plan.features.map((f) => <span key={f} className="flex items-center gap-2 text-lg font-bold" style={{ textShadow: 'var(--tshadow)' }}><Check size={20} strokeWidth={3} style={{ color: 'var(--accent)' }} />{f}</span>)}
+              <p style={{ textShadow: 'var(--tshadow)' }} className="font-display text-5xl font-bold leading-none md:text-6xl">
+                <Accent><CountUp value={s.plan.price} currency /></Accent> <span className="text-lg opacity-80">/ сар</span>
+              </p>
+              <div className="my-4 flex flex-wrap justify-center gap-x-4 gap-y-2 md:justify-start">
+                {s.plan.features.map((f) => <span key={f} className="flex items-center gap-1.5 text-sm font-bold" style={{ textShadow: 'var(--tshadow)' }}><Check size={16} strokeWidth={3} style={{ color: 'var(--accent)' }} />{f}</span>)}
               </div>
               <GoldButton href={s.plan.url}>{s.plan.cta}</GoldButton>
             </motion.div>
           </div>
+          <motion.p variants={item} style={{ textShadow: 'var(--tshadow)' }}
+            className="mx-auto mt-8 max-w-5xl border-t border-current/20 pt-5 text-center font-display text-2xl font-bold leading-tight sm:text-3xl md:text-4xl">
+            <Accent><CountUp value={s.paidUsers} /></Accent>{' хэрэглэгч + ашиг'}
+          </motion.p>
         </>
       );
 
